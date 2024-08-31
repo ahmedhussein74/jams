@@ -1,12 +1,24 @@
 const JobSeeker = require("../models/JobSeeker");
 const STATUS = require("../utils/responseStatus");
+const multerPDF = require("../utils/multerPDF");
+
+exports.uploadResume = multerPDF(
+  "public/resumes", // Directory to save the uploaded resume files
+  "resume", // Field name in the form
+  (req, file, cb) => {
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `${file.originalname.split(".")[0]}-${req.userId}.${ext}`);
+  },
+  (req, file) => file.mimetype === "application/pdf"
+);
 
 exports.createOrUpdateProfile = async (req, res) => {
-  const { resume, jobTittle, education, experience, skills } = req.body;
+  const { jobTittle, education, experience, skills } = req.body;
+  const resumePath = req.file ? req.file.path : null;
   const profileFields = {
     userId: req.user.id,
     jobTittle,
-    resume,
+    resume: resumePath || req.body.resume,
     education,
     experience,
     skills,
